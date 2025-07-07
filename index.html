@@ -176,9 +176,9 @@
             <form id="formUsuario" class="p-8">
                 <h2 class="text-2xl font-bold mb-6">Adicionar Novo Usuário</h2>
                 <div class="space-y-4">
-                    <div><label class="block text-sm font-medium">Usuário</label><input type="text" name="username" required class="mt-1 block w-full p-2 border rounded-lg"></div>
+                    <div><label class="block text-sm font-medium">Usuário</label><input type="text" name="username" required class="mt-1 block w-full p-2 border border-gray-300 rounded-lg"></div>
                     <div><label class="block text-sm font-medium">Email</label><input type="email" name="email" required class="mt-1 block w-full p-2 border border-gray-300 rounded-lg"></div>
-                    <div><label class="block text-sm font-medium">Senha</label><input type="password" name="password" required class="mt-1 block w-full p-2 border rounded-lg"></div>
+                    <div><label class="block text-sm font-medium">Senha</label><input type="password" name="password" required class="mt-1 block w-full p-2 border border-gray-300 rounded-lg"></div>
                     <div><label class="block text-sm font-medium">Nível de Acesso</label><select name="role" class="mt-1 block w-full p-2 border rounded-lg"><option value="common">Comum</option><option value="master">Master</option></select></div>
                 </div>
                 <div class="flex justify-end mt-8 space-x-4"><button type="button" class="btn-cancel bg-gray-200 font-bold py-2 px-6 rounded-lg">Cancelar</button><button type="submit" class="bg-blue-600 text-white font-bold py-2 px-6 rounded-lg">Salvar</button></div>
@@ -193,7 +193,14 @@
         import { getFirestore, doc, getDoc, getDocs, addDoc, setDoc, updateDoc, deleteDoc, collection, query, where, serverTimestamp, runTransaction, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // --- CONFIGURAÇÃO E ESTADO GLOBAL ---
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+        const firebaseConfig = {
+          apiKey: "AIzaSyA2QbTc66Hir01rxRBO8d8jbldBbdYVNHQ",
+          authDomain: "estoque-5bd20.firebaseapp.com",
+          projectId: "estoque-5bd20",
+          storageBucket: "estoque-5bd20.appspot.com",
+          messagingSenderId: "877422312225",
+          appId: "1:877422312225:web:b600eaae6f06a752575c60"
+        };
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
