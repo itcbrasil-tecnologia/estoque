@@ -18,6 +18,7 @@
         .report-nav-btn-active { background-color: #2563eb; color: white; }
         .report-nav-btn { background-color: #f3f4f6; color: #374151; }
         .report-nav-btn:hover { background-color: #e5e7eb; }
+        .filter-active { background-color: #e0e7ff; border-color: #4f46e5; }
     </style>
 </head>
 <body class="bg-gray-100 text-gray-800">
@@ -221,17 +222,12 @@
         const mainAppScreen = document.getElementById('main-app');
         const loginForm = document.getElementById('login-form');
         const loginError = document.getElementById('login-error');
-        const logoutBtn = document.getElementById('logout-btn');
         const usernameDisplay = document.getElementById('username-display');
         
         const loadingEl = document.getElementById('loading');
         const semDadosEl = document.getElementById('semDados');
         const viewContainer = document.getElementById('viewContainer');
         const viewHeader = document.getElementById('viewHeader');
-        const mainNav = document.getElementById('main-nav');
-        
-        // --- FUNÇÕES DE RENDERIZAÇÃO E LÓGICA DE UI ---
-        // (Todas as funções de renderização, modais, etc. vêm aqui)
         
         // --- INICIALIZAÇÃO E AUTENTICAÇÃO ---
         onAuthStateChanged(auth, async (user) => {
@@ -298,9 +294,6 @@
         }
 
         // --- LÓGICA DE NAVEGAÇÃO E RENDERIZAÇÃO ---
-        const cadastrosBtn = document.getElementById('cadastros-menu-btn');
-        const cadastrosDropdown = document.getElementById('cadastros-dropdown');
-
         function aplicarFiltros(e) {
             const termo = e.target.value.toLowerCase();
             viewContainer.querySelectorAll('.card-item').forEach(card => {
@@ -327,8 +320,8 @@
         
         function renderizarHeader(title, buttonInfo = null) {
             let buttonHtml = '';
-            if (buttonInfo && (currentUserRole === 'master' || buttonInfo.id !== 'abrirModalUsuario')) {
-                buttonHtml = `<button id="${buttonInfo.id}" data-action="${buttonInfo.action}" class="bg-blue-600 text-white font-bold py-2 px-4 rounded-lg shadow-md hover:bg-blue-700 flex items-center"><i class="${buttonInfo.icon} mr-2"></i>${buttonInfo.text}</button>`;
+            if (buttonInfo && (currentUserRole === 'master' || buttonInfo.action !== 'abrir-modal-usuario')) {
+                buttonHtml = `<button data-action="${buttonInfo.action}" class="bg-blue-600 text-white font-bold py-2 px-4 rounded-lg shadow-md hover:bg-blue-700 flex items-center"><i class="${buttonInfo.icon} mr-2"></i>${buttonInfo.text}</button>`;
             }
             viewHeader.innerHTML = `
                 <div><h1 class="text-2xl font-bold text-gray-800">${title}</h1></div>
@@ -375,9 +368,56 @@
             viewContainer.appendChild(grid);
         }
 
-        // ... O restante do código JavaScript permanece o mesmo da versão anterior
-        // ... (renderizarViewAuxiliar, aplicarFiltros, handleCardClick, excluirItem, excluirProduto, modais, etc.)
+        function renderizarViewAuxiliar(collectionName, title) {
+            const buttonInfo = currentUserRole === 'master' ? {action: `abrir-modal-auxiliar`, text: `Adicionar ${title.slice(0, -1)}`, icon: 'fas fa-plus'} : null;
+            renderizarHeader(title, buttonInfo);
+            
+            const cache = caches[collectionName];
+            if (cache.size === 0) { semDadosEl.style.display = 'block'; return; }
+            const list = document.createElement('div');
+            list.className = 'bg-white rounded-lg shadow-md divide-y divide-gray-200';
+            
+            cache.forEach(item => {
+                let details = '';
+                if(collectionName === 'fornecedores' && item.contato_nome) {
+                    details = `<span class="text-sm text-gray-500 ml-4">${item.contato_nome} - ${item.contato_whatsapp || 'N/A'}</span>`;
+                }
+                list.innerHTML += `
+                    <div class="card-item p-4 flex justify-between items-center" data-filter-key="${item.nome.toLowerCase()}">
+                        <div><span class="font-medium">${item.nome}</span>${details}</div>
+                        ${currentUserRole === 'master' ? `
+                        <div>
+                            <button data-action="editar-auxiliar" data-collection="${collectionName}" data-id="${item.id}" class="text-yellow-600 px-2"><i class="fas fa-edit"></i></button>
+                            <button data-action="excluir-item" data-collection="${collectionName}" data-id="${item.id}" class="text-red-600 px-2"><i class="fas fa-trash"></i></button>
+                        </div>` : ''}
+                    </div>`;
+            });
+            viewContainer.appendChild(list);
+        }
         
+        function renderizarViewUsuarios() {
+            renderizarHeader('Gestão de Usuários', {action: 'abrir-modal-usuario', text: 'Adicionar Usuário', icon: 'fas fa-plus'});
+
+            const list = document.createElement('div');
+            list.className = 'bg-white rounded-lg shadow-md divide-y divide-gray-200';
+            
+            caches.usuarios.forEach((user, id) => {
+                list.innerHTML += `
+                    <div class="card-item p-4 flex justify-between items-center" data-filter-key="${user.username.toLowerCase()} ${user.email.toLowerCase()}">
+                        <div>
+                            <span class="font-medium">${user.username}</span>
+                            <span class="text-sm text-gray-500 ml-4">${user.email}</span>
+                            <span class="ml-4 text-xs font-semibold uppercase px-2 py-1 rounded-full ${user.role === 'master' ? 'bg-blue-200 text-blue-800' : 'bg-gray-200 text-gray-800'}">${user.role}</span>
+                        </div>
+                        ${currentUser.uid !== id ? // Não pode excluir a si mesmo
+                        `<div>
+                            <button data-action="excluir-usuario" data-id="${id}" class="text-red-600 px-2"><i class="fas fa-trash"></i></button>
+                        </div>` : ''}
+                    </div>`;
+            });
+            viewContainer.appendChild(list);
+        }
+
         // --- LÓGICA DE RELATÓRIOS ---
         function renderizarViewRelatorios() {
             renderizarHeader('Relatórios');
@@ -415,30 +455,6 @@
             }
         }
 
-        // ... (resto do código dos relatórios e outras funções)
-        function renderizarViewUsuarios() {
-            renderizarHeader('Gestão de Usuários', {action: 'abrir-modal-usuario', text: 'Adicionar Usuário', icon: 'fas fa-plus'});
-
-            const list = document.createElement('div');
-            list.className = 'bg-white rounded-lg shadow-md divide-y divide-gray-200';
-            
-            caches.usuarios.forEach((user, id) => {
-                list.innerHTML += `
-                    <div class="card-item p-4 flex justify-between items-center" data-filter-key="${user.username.toLowerCase()} ${user.email.toLowerCase()}">
-                        <div>
-                            <span class="font-medium">${user.username}</span>
-                            <span class="text-sm text-gray-500 ml-4">${user.email}</span>
-                            <span class="ml-4 text-xs font-semibold uppercase px-2 py-1 rounded-full ${user.role === 'master' ? 'bg-blue-200 text-blue-800' : 'bg-gray-200 text-gray-800'}">${user.role}</span>
-                        </div>
-                        ${currentUser.uid !== id ? // Não pode excluir a si mesmo
-                        `<div>
-                            <button data-action="excluir-usuario" data-id="${id}" class="text-red-600 px-2"><i class="fas fa-trash"></i></button>
-                        </div>` : ''}
-                    </div>`;
-            });
-            viewContainer.appendChild(list);
-        }
-
         // --- MANIPULADOR DE EVENTOS CENTRAL ---
         document.addEventListener('click', (e) => {
             const target = e.target.closest('[data-action]');
@@ -446,49 +462,29 @@
 
             const { action, id, collection, view, report } = target.dataset;
             
-            // Ações de Navegação
+            // Ações de Navegação e Menus
             if (action === 'navigate-view') {
                 e.preventDefault();
                 currentView = view;
-                
-                mainNav.querySelectorAll('button, a').forEach(el => {
-                    el.classList.remove('nav-btn-active');
-                    if(el.tagName === 'BUTTON' && !el.parentElement.classList.contains('relative')) el.classList.add('nav-btn');
-                });
-                
-                if (target.closest('#cadastros-dropdown')) {
-                    cadastrosBtn.classList.add('nav-btn-active');
-                    cadastrosBtn.classList.remove('nav-btn');
-                } else {
-                    target.classList.add('nav-btn-active');
-                    target.classList.remove('nav-btn');
-                    cadastrosBtn.classList.remove('nav-btn-active');
-                    cadastrosBtn.classList.add('nav-btn');
-                }
-                
-                cadastrosDropdown.classList.add('hidden');
                 renderizarView();
-            }
-            if (action === 'toggle-cadastros-dropdown') {
+            } else if (action === 'toggle-cadastros-dropdown') {
                 cadastrosDropdown.classList.toggle('hidden');
-            }
-            if (action === 'logout') {
+            } else if (action === 'logout') {
                 signOut(auth);
             }
-
             // Ações de Abertura de Modal
-            if (action === 'abrir-modal-produto') abrirModalProduto();
-            if (action === 'abrir-modal-usuario') abrirModalUsuario();
-            if (action === 'abrir-modal-auxiliar') abrirModalAuxiliar(collection);
-            if (action === 'detalhes') abrirModalDetalhes(id);
-            if (action === 'movimentar') abrirModalMovimentar(id);
-            if (action === 'editar-produto') abrirModalProduto(id);
-            
+            else if (action === 'abrir-modal-produto') abrirModalProduto(id);
+            else if (action === 'abrir-modal-usuario') abrirModalUsuario();
+            else if (action === 'abrir-modal-auxiliar') abrirModalAuxiliar(collection);
+            else if (action === 'detalhes') abrirModalDetalhes(id);
+            else if (action === 'movimentar') abrirModalMovimentar(id);
+            else if (action === 'editar-produto') abrirModalProduto(id);
+            else if (action === 'editar-auxiliar') abrirModalAuxiliar(collection, id);
             // Ações de Exclusão
-            if (action === 'excluir-item') excluirItem(collection, id);
-
+            else if (action === 'excluir-item') excluirItem(collection, id);
+            else if (action === 'excluir-usuario') alert("Função de excluir usuário precisa ser implementada com cuidado (Admin SDK).");
             // Ações de Relatório
-            if (action === 'render-report') {
+            else if (action === 'render-report') {
                 document.getElementById('report-nav').querySelectorAll('button').forEach(btn => {
                     btn.classList.remove('report-nav-btn-active');
                     btn.classList.add('report-nav-btn');
@@ -496,6 +492,8 @@
                 target.classList.add('report-nav-btn-active');
                 target.classList.remove('report-nav-btn');
                 renderizarRelatorio(report);
+            } else if (action === 'add-documento') {
+                addDocumentoField();
             }
         });
     </script>
