@@ -140,6 +140,7 @@
             if (user) {
                 currentUser = user;
                 const userDocRef = doc(db, "usuarios", user.uid);
+                console.log("Tentando ler o perfil do usuário em:", userDocRef.path); // LOG DE DIAGNÓSTICO
                 try {
                     const userDoc = await getDoc(userDocRef);
                     if (userDoc.exists()) {
