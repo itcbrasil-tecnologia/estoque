@@ -85,11 +85,106 @@
     </div>
 
     <!-- Modais -->
-    <div id="modalProduto" class="fixed inset-0 z-50 flex items-center justify-center modal-backdrop hidden">...</div>
-    <div id="modalAuxiliar" class="fixed inset-0 z-50 flex items-center justify-center modal-backdrop hidden">...</div>
-    <div id="modalDetalhes" class="fixed inset-0 z-50 flex items-center justify-center modal-backdrop hidden">...</div>
-    <div id="modalMovimentar" class="fixed inset-0 z-50 flex items-center justify-center modal-backdrop hidden">...</div>
-    <div id="modalUsuario" class="fixed inset-0 z-50 flex items-center justify-center modal-backdrop hidden">...</div>
+    <div id="modalProduto" class="fixed inset-0 z-50 flex items-center justify-center modal-backdrop hidden">
+        <div class="bg-white rounded-lg shadow-2xl w-11/12 md:w-2/3 lg:w-1/2 modal-content overflow-y-auto">
+            <form id="formProduto" class="p-8">
+                <h2 id="modalProdutoTitulo" class="text-2xl font-bold mb-6">Definição de Produto</h2>
+                <input type="hidden" name="produtoId">
+                <div class="space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+                        <div class="md:col-span-2"><label class="block text-sm font-medium">Nome</label><input type="text" name="nome" required class="mt-1 block w-full p-2 border border-gray-300 rounded-lg"></div>
+                        <div class="md:col-span-2"><label class="block text-sm font-medium">Descrição</label><textarea name="descricao" rows="2" class="mt-1 block w-full p-2 border border-gray-300 rounded-lg"></textarea></div>
+                        <div class="md:col-span-2"><label class="block text-sm font-medium">URL da Foto</label><input type="url" name="foto_url" class="mt-1 block w-full p-2 border border-gray-300 rounded-lg"></div>
+                        <div><label class="block text-sm font-medium">Serial Number</label><input type="text" name="serialNumber" class="mt-1 block w-full p-2 border border-gray-300 rounded-lg"></div>
+                        <div><label class="block text-sm font-medium">Unidade</label><input type="text" name="unidade" required class="mt-1 block w-full p-2 border border-gray-300 rounded-lg"></div>
+                        <div><label class="block text-sm font-medium">Modelo</label><input type="text" name="modelo" class="mt-1 block w-full p-2 border border-gray-300 rounded-lg"></div>
+                        <div><label class="block text-sm font-medium">Categoria</label><select name="categoriaId" class="mt-1 block w-full p-2 border border-gray-300 rounded-lg"></select></div>
+                        <div class="md:col-span-2"><label class="block text-sm font-medium">Fabricante</label><select name="fabricanteId" class="mt-1 block w-full p-2 border border-gray-300 rounded-lg"></select></div>
+                        <div class="md:col-span-2"><label class="block text-sm font-medium">Fornecedor</label><select name="fornecedorId" class="mt-1 block w-full p-2 border border-gray-300 rounded-lg"></select></div>
+                        <div class="md:col-span-2"><label class="block text-sm font-medium">Notas</label><textarea name="notas_internas" rows="2" class="mt-1 block w-full p-2 border border-gray-300 rounded-lg"></textarea></div>
+                    </div>
+                    <div class="border-t pt-4 mt-4">
+                        <div class="flex justify-between items-center mb-2">
+                            <p class="text-sm font-bold text-gray-600">Documentos</p>
+                            <button type="button" id="addDocumentoBtn" class="text-sm bg-blue-100 text-blue-700 font-semibold py-1 px-3 rounded-md hover:bg-blue-200">Adicionar</button>
+                        </div>
+                        <div id="documentosContainer" class="space-y-2"></div>
+                    </div>
+                    <div id="bloco-estoque-inicial" class="border-t pt-4 mt-4">
+                        <p class="text-sm font-bold text-gray-600">Estoque Inicial (Opcional)</p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+                             <div><label class="block text-sm font-medium">Quantidade</label><input type="number" step="any" name="quantidade_inicial" class="mt-1 block w-full p-2 border border-gray-300 rounded-lg"></div>
+                             <div><label class="block text-sm font-medium">Localidade</label><select name="localidade_inicial" class="mt-1 block w-full p-2 border border-gray-300 rounded-lg"></select></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex justify-between items-center mt-8">
+                    <button type="button" id="excluirProdutoBtnModal" class="bg-red-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-red-700 hidden"><i class="fas fa-trash mr-2"></i>Excluir</button>
+                    <div class="ml-auto space-x-4">
+                        <button type="button" class="btn-cancel bg-gray-200 text-gray-800 font-bold py-2 px-6 rounded-lg hover:bg-gray-300">Cancelar</button>
+                        <button type="submit" class="bg-blue-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-blue-700">Salvar</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div id="modalAuxiliar" class="fixed inset-0 z-50 flex items-center justify-center modal-backdrop hidden">
+        <div class="bg-white rounded-lg shadow-2xl w-11/12 md:w-1/2 lg:w-1/3 modal-content overflow-y-auto">
+            <form id="formAuxiliar" class="p-8">
+                <h2 id="modalAuxiliarTitulo" class="text-2xl font-bold mb-6"></h2>
+                <input type="hidden" name="id">
+                <input type="hidden" name="collectionName">
+                <div id="modalAuxiliarCampos" class="space-y-4"></div>
+                <div class="flex justify-end mt-8 space-x-4"><button type="button" class="btn-cancel bg-gray-200 text-gray-800 font-bold py-2 px-6 rounded-lg">Cancelar</button><button type="submit" class="bg-blue-600 text-white font-bold py-2 px-6 rounded-lg">Salvar</button></div>
+            </form>
+        </div>
+    </div>
+    <div id="modalDetalhes" class="fixed inset-0 z-50 flex items-center justify-center modal-backdrop hidden">
+        <div class="bg-white rounded-lg shadow-2xl w-11/12 md:w-3/4 lg:w-2/3 modal-content overflow-y-auto p-8">
+            <div class="flex justify-between items-start mb-4"><h2 class="text-2xl font-bold" id="detalhesNome"></h2><button class="btn-cancel text-gray-500 hover:text-gray-800 text-2xl">&times;</button></div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="md:col-span-1"><img id="detalhesFoto" src="" alt="Foto do Produto" class="rounded-lg w-full h-auto object-cover shadow-md"></div>
+                <div class="md:col-span-2 space-y-3 text-sm">
+                    <p><strong>Serial Number:</strong> <span id="detalhesSerialNumber" class="font-mono"></span></p>
+                    <p><strong>Descrição:</strong> <span id="detalhesDescricao"></span></p>
+                    <p><strong>Fabricante/Modelo:</strong> <span id="detalhesFabricanteModelo"></span></p>
+                    <p><strong>Categoria:</strong> <span id="detalhesCategoria"></span></p>
+                    <p><strong>Fornecedor:</strong> <span id="detalhesFornecedor"></span></p>
+                    <p><strong>Notas:</strong> <span id="detalhesNotas"></span></p>
+                    <div class="mt-4"><h4 class="font-bold text-md mb-2">Estoque por Localidade</h4><div id="detalhesEstoqueLocal" class="space-y-1 text-sm"></div></div>
+                    <div class="mt-4"><h4 class="font-bold text-md mb-2">Documentos</h4><div id="detalhesDocumentos" class="flex flex-wrap gap-2"></div></div>
+                </div>
+            </div>
+            <div class="mt-8"><h3 class="text-xl font-bold mb-4">Histórico de Movimentação</h3><div id="tabelaHistoricoContainer" class="overflow-x-auto"></div></div>
+        </div>
+    </div>
+    <div id="modalMovimentar" class="fixed inset-0 z-50 flex items-center justify-center modal-backdrop hidden">
+        <div class="bg-white rounded-lg shadow-2xl w-11/12 md:w-1/2 lg:w-1/3">
+            <form id="formMovimentar" class="p-8">
+                <h2 class="text-2xl font-bold mb-6">Movimentar Estoque</h2>
+                <div class="mb-4"><label class="block text-sm font-medium">Produto</label><select name="produtoId" required class="mt-1 block w-full p-2 border border-gray-300 rounded-lg"></select></div>
+                <div class="mb-4"><label class="block text-sm font-medium">Tipo</label><select name="tipo" class="mt-1 block w-full p-2 border border-gray-300 rounded-lg"><option value="ENTRADA">Entrada</option><option value="SAIDA">Saída</option><option value="TRANSFERENCIA">Transferência</option></select></div>
+                <div class="mb-4"><label class="block text-sm font-medium">Quantidade</label><input type="number" step="any" name="quantidade" required class="mt-1 block w-full p-2 border border-gray-300 rounded-lg"></div>
+                <div id="campoLocalOrigem" class="mb-4 hidden"><label class="block text-sm font-medium">Local de Origem</label><select name="localidadeOrigemId" class="mt-1 block w-full p-2 border border-gray-300 rounded-lg"></select></div>
+                <div id="campoLocalDestino" class="mb-4 hidden"><label class="block text-sm font-medium">Local de Destino</label><select name="localidadeDestinoId" class="mt-1 block w-full p-2 border border-gray-300 rounded-lg"></select></div>
+                <div class="flex justify-end mt-8 space-x-4"><button type="button" class="btn-cancel bg-gray-200 text-gray-800 font-bold py-2 px-6 rounded-lg">Cancelar</button><button type="submit" class="bg-green-600 text-white font-bold py-2 px-6 rounded-lg">Confirmar</button></div>
+            </form>
+        </div>
+    </div>
+    <div id="modalUsuario" class="fixed inset-0 z-50 flex items-center justify-center modal-backdrop hidden">
+        <div class="bg-white rounded-lg shadow-2xl w-11/12 md:w-1/2 lg:w-1/3">
+            <form id="formUsuario" class="p-8">
+                <h2 class="text-2xl font-bold mb-6">Adicionar Novo Usuário</h2>
+                <div class="space-y-4">
+                    <div><label class="block text-sm font-medium">Usuário</label><input type="text" name="username" required class="mt-1 block w-full p-2 border rounded-lg"></div>
+                    <div><label class="block text-sm font-medium">Email</label><input type="email" name="email" required class="mt-1 block w-full p-2 border border-gray-300 rounded-lg"></div>
+                    <div><label class="block text-sm font-medium">Senha</label><input type="password" name="password" required class="mt-1 block w-full p-2 border rounded-lg"></div>
+                    <div><label class="block text-sm font-medium">Nível de Acesso</label><select name="role" class="mt-1 block w-full p-2 border rounded-lg"><option value="common">Comum</option><option value="master">Master</option></select></div>
+                </div>
+                <div class="flex justify-end mt-8 space-x-4"><button type="button" class="btn-cancel bg-gray-200 font-bold py-2 px-6 rounded-lg">Cancelar</button><button type="submit" class="bg-blue-600 text-white font-bold py-2 px-6 rounded-lg">Salvar</button></div>
+            </form>
+        </div>
+    </div>
     
     <!-- Firebase -->
     <script type="module">
