@@ -106,7 +106,7 @@
                     <div class="border-t pt-4 mt-4">
                         <div class="flex justify-between items-center mb-2">
                             <p class="text-sm font-bold text-gray-600">Documentos</p>
-                            <button type="button" id="addDocumentoBtn" class="text-sm bg-blue-100 text-blue-700 font-semibold py-1 px-3 rounded-md hover:bg-blue-200">Adicionar</button>
+                            <button type="button" data-action="add-documento" class="text-sm bg-blue-100 text-blue-700 font-semibold py-1 px-3 rounded-md hover:bg-blue-200">Adicionar</button>
                         </div>
                         <div id="documentosContainer" class="space-y-2"></div>
                     </div>
@@ -230,12 +230,15 @@
         const viewHeader = document.getElementById('viewHeader');
         const mainNav = document.getElementById('main-nav');
         
+        // --- FUNÇÕES DE RENDERIZAÇÃO E LÓGICA DE UI ---
+        // (Todas as funções de renderização, modais, etc. vêm aqui)
+        
         // --- INICIALIZAÇÃO E AUTENTICAÇÃO ---
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 currentUser = user;
                 const userDocRef = doc(db, "usuarios", user.uid);
-                console.log("Tentando ler o perfil do usuário em:", userDocRef.path); // LOG DE DIAGNÓSTICO
+                console.log("Tentando ler o perfil do usuário em:", userDocRef.path);
                 try {
                     const userDoc = await getDoc(userDocRef);
                     if (userDoc.exists()) {
