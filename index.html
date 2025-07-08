@@ -177,7 +177,7 @@
             <form id="formUsuario" class="p-8">
                 <h2 class="text-2xl font-bold mb-6">Adicionar Novo Usuário</h2>
                 <div class="space-y-4">
-                    <div><label class="block text-sm font-medium">Usuário</label><input type="text" name="username" required class="mt-1 block w-full p-2 border rounded-lg"></div>
+                    <div><label class="block text-sm font-medium">Usuário</label><input type="text" name="username" required class="mt-1 block w-full p-2 border border-gray-300 rounded-lg"></div>
                     <div><label class="block text-sm font-medium">Email</label><input type="email" name="email" required class="mt-1 block w-full p-2 border border-gray-300 rounded-lg"></div>
                     <div><label class="block text-sm font-medium">Senha</label><input type="password" name="password" required class="mt-1 block w-full p-2 border border-gray-300 rounded-lg"></div>
                     <div><label class="block text-sm font-medium">Nível de Acesso</label><select name="role" class="mt-1 block w-full p-2 border rounded-lg"><option value="common">Comum</option><option value="master">Master</option></select></div>
@@ -394,6 +394,38 @@
                 addDocumentoField();
             }
         });
+
+        // --- INICIALIZAÇÃO ---
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                currentUser = user;
+                const userDocRef = doc(db, "usuarios", user.uid);
+                console.log("Tentando ler o perfil do usuário em:", userDocRef.path);
+                try {
+                    const userDoc = await getDoc(userDocRef);
+                    if (userDoc.exists()) {
+                        currentUserRole = userDoc.data().role;
+                        usernameDisplay.textContent = userDoc.data().username || user.email;
+                        loginScreen.classList.add('hidden');
+                        mainAppScreen.classList.remove('hidden');
+                        await iniciarSistema();
+                    } else {
+                        loginError.textContent = "Perfil de usuário não encontrado no banco de dados. Contate o administrador.";
+                        await signOut(auth);
+                    }
+                } catch (error) {
+                    console.error("Erro detalhado ao buscar perfil do usuário:", error);
+                    loginError.textContent = "Erro ao carregar dados do usuário. Verifique as permissões do Firestore.";
+                    await signOut(auth);
+                }
+            } else {
+                currentUser = null;
+                currentUserRole = null;
+                loginScreen.classList.remove('hidden');
+                mainAppScreen.classList.add('hidden');
+            }
+        });
+
     </script>
 </body>
 </html>
