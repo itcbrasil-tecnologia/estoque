@@ -338,6 +338,13 @@
             }
         });
 
+        function aplicarFiltros(e) {
+            const termo = e.target.value.toLowerCase();
+            viewContainer.querySelectorAll('.card-item').forEach(card => {
+                card.style.display = card.dataset.filterKey.includes(termo) ? '' : 'none';
+            });
+        }
+
         function renderizarView() {
             viewContainer.innerHTML = '';
             semDadosEl.style.display = 'none';
