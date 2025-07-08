@@ -18,6 +18,7 @@
         .report-nav-btn-active { background-color: #2563eb; color: white; }
         .report-nav-btn { background-color: #f3f4f6; color: #374151; }
         .report-nav-btn:hover { background-color: #e5e7eb; }
+        .filter-active { background-color: #e0e7ff; border-color: #4f46e5; }
     </style>
 </head>
 <body class="bg-gray-100 text-gray-800">
@@ -228,96 +229,13 @@
         const viewContainer = document.getElementById('viewContainer');
         const viewHeader = document.getElementById('viewHeader');
         
-        // --- FUNÇÕES DE RENDERIZAÇÃO E LÓGICA DE UI ---
-        // (Todas as funções de renderização, modais, etc. vêm aqui)
+        // --- FUNÇÕES DE RENDERIZAÇÃO E LÓGICA DE UI (DEFINIDAS PRIMEIRO) ---
         
-        // --- INICIALIZAÇÃO E AUTENTICAÇÃO ---
-        onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                currentUser = user;
-                const userDocRef = doc(db, "usuarios", user.uid);
-                console.log("Tentando ler o perfil do usuário em:", userDocRef.path);
-                try {
-                    const userDoc = await getDoc(userDocRef);
-                    if (userDoc.exists()) {
-                        currentUserRole = userDoc.data().role;
-                        usernameDisplay.textContent = userDoc.data().username || user.email;
-                        loginScreen.classList.add('hidden');
-                        mainAppScreen.classList.remove('hidden');
-                        await iniciarSistema();
-                    } else {
-                        loginError.textContent = "Perfil de usuário não encontrado no banco de dados. Contate o administrador.";
-                        await signOut(auth);
-                    }
-                } catch (error) {
-                    console.error("Erro detalhado ao buscar perfil do usuário:", error);
-                    loginError.textContent = "Erro ao carregar dados do usuário. Verifique as permissões do Firestore.";
-                    await signOut(auth);
-                }
-            } else {
-                currentUser = null;
-                currentUserRole = null;
-                loginScreen.classList.remove('hidden');
-                mainAppScreen.classList.add('hidden');
-            }
-        });
-
-        loginForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            loginError.textContent = '';
-            const email = loginForm.email.value;
-            const password = loginForm.password.value;
-            
-            try {
-                await signInWithEmailAndPassword(auth, email, password);
-            } catch (error) {
-                console.error("Login error:", error.code);
-                loginError.textContent = "Email ou senha inválidos.";
-            }
-        });
-
-        async function iniciarSistema() {
-            loadingEl.style.display = 'block';
-            for (const name of collections) {
-                const q = query(collection(db, name));
-                const snapshot = await getDocs(q);
-                if (['estoque', 'historico'].includes(name)) {
-                    caches[name] = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                } else {
-                    caches[name].clear();
-                    snapshot.forEach(doc => caches[name].set(doc.id, { id: doc.id, ...doc.data() }));
-                }
-            }
-            
-            document.getElementById('nav-usuarios').style.display = currentUserRole === 'master' ? 'block' : 'none';
-
-            loadingEl.style.display = 'none';
-            renderizarView();
-        }
-
-        // --- LÓGICA DE NAVEGAÇÃO E RENDERIZAÇÃO ---
         function aplicarFiltros(e) {
             const termo = e.target.value.toLowerCase();
             viewContainer.querySelectorAll('.card-item').forEach(card => {
                 card.style.display = card.dataset.filterKey.includes(termo) ? '' : 'none';
             });
-        }
-
-        function renderizarView() {
-            viewContainer.innerHTML = '';
-            semDadosEl.style.display = 'none';
-            const renderMap = {
-                estoque: renderizarViewEstoque,
-                relatorios: renderizarViewRelatorios,
-                localidades: () => renderizarViewAuxiliar('localidades', 'Localidades'),
-                fornecedores: () => renderizarViewAuxiliar('fornecedores', 'Fornecedores'),
-                categorias: () => renderizarViewAuxiliar('categorias', 'Categorias'),
-                fabricantes: () => renderizarViewAuxiliar('fabricantes', 'Fabricantes'),
-                usuarios: renderizarViewUsuarios,
-            };
-            if(renderMap[currentView]) {
-                renderMap[currentView]();
-            }
         }
         
         function renderizarHeader(title, buttonInfo = null) {
@@ -367,12 +285,62 @@
                     </div>`;
                 grid.appendChild(card);
             });
+            viewContainer.innerHTML = '';
             viewContainer.appendChild(grid);
         }
 
-        // ... O restante do código JavaScript permanece o mesmo da versão anterior
-        // ... (renderizarViewAuxiliar, aplicarFiltros, handleCardClick, excluirItem, excluirProduto, modais, etc.)
-        
+        function renderizarViewAuxiliar(collectionName, title) {
+            const buttonInfo = currentUserRole === 'master' ? {action: `abrir-modal-auxiliar`, collection: collectionName, text: `Adicionar ${title.slice(0, -1)}`, icon: 'fas fa-plus'} : null;
+            renderizarHeader(title, buttonInfo);
+            
+            const cache = caches[collectionName];
+            if (cache.size === 0) { semDadosEl.style.display = 'block'; return; }
+            const list = document.createElement('div');
+            list.className = 'bg-white rounded-lg shadow-md divide-y divide-gray-200';
+            
+            cache.forEach(item => {
+                let details = '';
+                if(collectionName === 'fornecedores' && item.contato_nome) {
+                    details = `<span class="text-sm text-gray-500 ml-4">${item.contato_nome} - ${item.contato_whatsapp || 'N/A'}</span>`;
+                }
+                list.innerHTML += `
+                    <div class="card-item p-4 flex justify-between items-center" data-filter-key="${item.nome.toLowerCase()}">
+                        <div><span class="font-medium">${item.nome}</span>${details}</div>
+                        ${currentUserRole === 'master' ? `
+                        <div>
+                            <button data-action="editar-auxiliar" data-collection="${collectionName}" data-id="${item.id}" class="text-yellow-600 px-2"><i class="fas fa-edit"></i></button>
+                            <button data-action="excluir-item" data-collection="${collectionName}" data-id="${item.id}" class="text-red-600 px-2"><i class="fas fa-trash"></i></button>
+                        </div>` : ''}
+                    </div>`;
+            });
+            viewContainer.innerHTML = '';
+            viewContainer.appendChild(list);
+        }
+
+        function renderizarViewUsuarios() {
+            renderizarHeader('Gestão de Usuários', {action: 'abrir-modal-usuario', text: 'Adicionar Usuário', icon: 'fas fa-plus'});
+
+            const list = document.createElement('div');
+            list.className = 'bg-white rounded-lg shadow-md divide-y divide-gray-200';
+            
+            caches.usuarios.forEach((user, id) => {
+                list.innerHTML += `
+                    <div class="card-item p-4 flex justify-between items-center" data-filter-key="${user.username.toLowerCase()} ${user.email.toLowerCase()}">
+                        <div>
+                            <span class="font-medium">${user.username}</span>
+                            <span class="text-sm text-gray-500 ml-4">${user.email}</span>
+                            <span class="ml-4 text-xs font-semibold uppercase px-2 py-1 rounded-full ${user.role === 'master' ? 'bg-blue-200 text-blue-800' : 'bg-gray-200 text-gray-800'}">${user.role}</span>
+                        </div>
+                        ${currentUser.uid !== id ? // Não pode excluir a si mesmo
+                        `<div>
+                            <button data-action="excluir-usuario" data-id="${id}" class="text-red-600 px-2"><i class="fas fa-trash"></i></button>
+                        </div>` : ''}
+                    </div>`;
+            });
+            viewContainer.innerHTML = '';
+            viewContainer.appendChild(list);
+        }
+
         // --- LÓGICA DE RELATÓRIOS ---
         function renderizarViewRelatorios() {
             renderizarHeader('Relatórios');
@@ -411,29 +379,7 @@
         }
 
         // ... (resto do código dos relatórios e outras funções)
-        function renderizarViewUsuarios() {
-            renderizarHeader('Gestão de Usuários', {action: 'abrir-modal-usuario', text: 'Adicionar Usuário', icon: 'fas fa-plus'});
-
-            const list = document.createElement('div');
-            list.className = 'bg-white rounded-lg shadow-md divide-y divide-gray-200';
-            
-            caches.usuarios.forEach((user, id) => {
-                list.innerHTML += `
-                    <div class="card-item p-4 flex justify-between items-center" data-filter-key="${user.username.toLowerCase()} ${user.email.toLowerCase()}">
-                        <div>
-                            <span class="font-medium">${user.username}</span>
-                            <span class="text-sm text-gray-500 ml-4">${user.email}</span>
-                            <span class="ml-4 text-xs font-semibold uppercase px-2 py-1 rounded-full ${user.role === 'master' ? 'bg-blue-200 text-blue-800' : 'bg-gray-200 text-gray-800'}">${user.role}</span>
-                        </div>
-                        ${currentUser.uid !== id ? // Não pode excluir a si mesmo
-                        `<div>
-                            <button data-action="excluir-usuario" data-id="${id}" class="text-red-600 px-2"><i class="fas fa-trash"></i></button>
-                        </div>` : ''}
-                    </div>`;
-            });
-            viewContainer.appendChild(list);
-        }
-
+        
         // --- MANIPULADOR DE EVENTOS CENTRAL ---
         document.addEventListener('click', (e) => {
             const target = e.target.closest('[data-action]');
