@@ -176,7 +176,7 @@
             <form id="formUsuario" class="p-8">
                 <h2 class="text-2xl font-bold mb-6">Adicionar Novo Usuário</h2>
                 <div class="space-y-4">
-                    <div><label class="block text-sm font-medium">Usuário</label><input type="text" name="username" required class="mt-1 block w-full p-2 border border-gray-300 rounded-lg"></div>
+                    <div><label class="block text-sm font-medium">Usuário</label><input type="text" name="username" required class="mt-1 block w-full p-2 border rounded-lg"></div>
                     <div><label class="block text-sm font-medium">Email</label><input type="email" name="email" required class="mt-1 block w-full p-2 border border-gray-300 rounded-lg"></div>
                     <div><label class="block text-sm font-medium">Senha</label><input type="password" name="password" required class="mt-1 block w-full p-2 border border-gray-300 rounded-lg"></div>
                     <div><label class="block text-sm font-medium">Nível de Acesso</label><select name="role" class="mt-1 block w-full p-2 border rounded-lg"><option value="common">Comum</option><option value="master">Master</option></select></div>
@@ -236,14 +236,21 @@
             if (user) {
                 currentUser = user;
                 const userDocRef = doc(db, "artifacts", appId, "public", "data", "usuarios", user.uid);
-                const userDoc = await getDoc(userDocRef);
-                if (userDoc.exists()) {
-                    currentUserRole = userDoc.data().role;
-                    usernameDisplay.textContent = userDoc.data().username || user.email;
-                    loginScreen.classList.add('hidden');
-                    mainAppScreen.classList.remove('hidden');
-                    await iniciarSistema();
-                } else {
+                try {
+                    const userDoc = await getDoc(userDocRef);
+                    if (userDoc.exists()) {
+                        currentUserRole = userDoc.data().role;
+                        usernameDisplay.textContent = userDoc.data().username || user.email;
+                        loginScreen.classList.add('hidden');
+                        mainAppScreen.classList.remove('hidden');
+                        await iniciarSistema();
+                    } else {
+                        loginError.textContent = "Perfil de usuário não encontrado no banco de dados.";
+                        await signOut(auth);
+                    }
+                } catch (error) {
+                    console.error("Erro ao buscar perfil do usuário:", error);
+                    loginError.textContent = "Erro ao carregar dados do usuário.";
                     await signOut(auth);
                 }
             } else {
@@ -271,6 +278,7 @@
         logoutBtn.addEventListener('click', async () => {
             await signOut(auth);
         });
+
 
         async function iniciarSistema() {
             loadingEl.style.display = 'block';
