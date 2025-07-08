@@ -52,24 +52,24 @@
                         <span class="text-xl font-bold">EstoquePRO</span>
                     </div>
                     <div id="main-nav" class="hidden md:flex items-center space-x-1">
-                        <button data-view="estoque" class="nav-btn-active px-3 py-2 rounded-md text-sm font-medium">Estoque</button>
-                        <button data-view="relatorios" class="nav-btn px-3 py-2 rounded-md text-sm font-medium">Relatórios</button>
+                        <button data-action="navigate-view" data-view="estoque" class="nav-btn-active px-3 py-2 rounded-md text-sm font-medium">Estoque</button>
+                        <button data-action="navigate-view" data-view="relatorios" class="nav-btn px-3 py-2 rounded-md text-sm font-medium">Relatórios</button>
                         <div class="relative">
-                            <button id="cadastros-menu-btn" class="nav-btn px-3 py-2 rounded-md text-sm font-medium flex items-center">
+                            <button id="cadastros-menu-btn" data-action="toggle-cadastros-dropdown" class="nav-btn px-3 py-2 rounded-md text-sm font-medium flex items-center">
                                 Cadastros <i class="fas fa-chevron-down ml-2 text-xs"></i>
                             </button>
                             <div id="cadastros-dropdown" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-20">
-                                <a href="#" data-view="localidades" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Localidades</a>
-                                <a href="#" data-view="fornecedores" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Fornecedores</a>
-                                <a href="#" data-view="categorias" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Categorias</a>
-                                <a href="#" data-view="fabricantes" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Fabricantes</a>
-                                <a href="#" data-view="usuarios" id="nav-usuarios" class="hidden block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Usuários</a>
+                                <a href="#" data-action="navigate-view" data-view="localidades" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Localidades</a>
+                                <a href="#" data-action="navigate-view" data-view="fornecedores" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Fornecedores</a>
+                                <a href="#" data-action="navigate-view" data-view="categorias" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Categorias</a>
+                                <a href="#" data-action="navigate-view" data-view="fabricantes" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Fabricantes</a>
+                                <a href="#" data-action="navigate-view" data-view="usuarios" id="nav-usuarios" class="hidden block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Usuários</a>
                             </div>
                         </div>
                     </div>
                     <div class="flex items-center ml-4">
                          <span id="username-display" class="text-sm text-gray-500 mr-4 font-semibold"></span>
-                         <button id="logout-btn" class="text-sm text-red-500 hover:text-red-700 font-medium flex items-center"><i class="fas fa-sign-out-alt mr-1"></i>Sair</button>
+                         <button id="logout-btn" data-action="logout" class="text-sm text-red-500 hover:text-red-700 font-medium flex items-center"><i class="fas fa-sign-out-alt mr-1"></i>Sair</button>
                     </div>
                 </div>
             </div>
@@ -278,10 +278,6 @@
             }
         });
 
-        logoutBtn.addEventListener('click', async () => {
-            await signOut(auth);
-        });
-
         async function iniciarSistema() {
             loadingEl.style.display = 'block';
             for (const name of collections) {
@@ -304,42 +300,6 @@
         // --- LÓGICA DE NAVEGAÇÃO E RENDERIZAÇÃO ---
         const cadastrosBtn = document.getElementById('cadastros-menu-btn');
         const cadastrosDropdown = document.getElementById('cadastros-dropdown');
-
-        cadastrosBtn.addEventListener('click', () => {
-            cadastrosDropdown.classList.toggle('hidden');
-        });
-
-        document.addEventListener('click', (e) => {
-            if (!cadastrosBtn.contains(e.target) && !cadastrosDropdown.contains(e.target)) {
-                cadastrosDropdown.classList.add('hidden');
-            }
-        });
-
-        mainNav.addEventListener('click', (e) => {
-            const target = e.target.closest('button, a');
-            if (target && target.dataset.view) {
-                e.preventDefault();
-                currentView = target.dataset.view;
-                
-                mainNav.querySelectorAll('button, a').forEach(el => {
-                    el.classList.remove('nav-btn-active');
-                    if(el.tagName === 'BUTTON' && !el.parentElement.classList.contains('relative')) el.classList.add('nav-btn');
-                });
-                
-                if (target.closest('#cadastros-dropdown')) {
-                    cadastrosBtn.classList.add('nav-btn-active');
-                    cadastrosBtn.classList.remove('nav-btn');
-                } else {
-                    target.classList.add('nav-btn-active');
-                    target.classList.remove('nav-btn');
-                    cadastrosBtn.classList.remove('nav-btn-active');
-                    cadastrosBtn.classList.add('nav-btn');
-                }
-                
-                cadastrosDropdown.classList.add('hidden');
-                renderizarView();
-            }
-        });
 
         function aplicarFiltros(e) {
             const termo = e.target.value.toLowerCase();
@@ -368,7 +328,7 @@
         function renderizarHeader(title, buttonInfo = null) {
             let buttonHtml = '';
             if (buttonInfo && (currentUserRole === 'master' || buttonInfo.id !== 'abrirModalUsuario')) {
-                buttonHtml = `<button id="${buttonInfo.id}" class="bg-blue-600 text-white font-bold py-2 px-4 rounded-lg shadow-md hover:bg-blue-700 flex items-center"><i class="${buttonInfo.icon} mr-2"></i>${buttonInfo.text}</button>`;
+                buttonHtml = `<button id="${buttonInfo.id}" data-action="${buttonInfo.action}" class="bg-blue-600 text-white font-bold py-2 px-4 rounded-lg shadow-md hover:bg-blue-700 flex items-center"><i class="${buttonInfo.icon} mr-2"></i>${buttonInfo.text}</button>`;
             }
             viewHeader.innerHTML = `
                 <div><h1 class="text-2xl font-bold text-gray-800">${title}</h1></div>
@@ -382,9 +342,8 @@
 
         // --- VIEWS PRINCIPAIS ---
         function renderizarViewEstoque() {
-            renderizarHeader('Visão Geral do Estoque', {id: 'abrirModalAdicionar', text: 'Adicionar Produto', icon: 'fas fa-plus'});
-            document.getElementById('abrirModalAdicionar').addEventListener('click', () => abrirModalProduto());
-
+            renderizarHeader('Visão Geral do Estoque', {action: 'abrir-modal-produto', text: 'Adicionar Produto', icon: 'fas fa-plus'});
+            
             if (caches.produtos.size === 0) { semDadosEl.style.display = 'block'; return; }
             const grid = document.createElement('div');
             grid.className = 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6';
@@ -414,7 +373,6 @@
                 grid.appendChild(card);
             });
             viewContainer.appendChild(grid);
-            viewContainer.addEventListener('click', handleCardClick);
         }
 
         // ... O restante do código JavaScript permanece o mesmo da versão anterior
@@ -424,13 +382,13 @@
         function renderizarViewRelatorios() {
             renderizarHeader('Relatórios');
             let reportNavButtons = `
-                <button data-report="estoquePorLocal" class="report-nav-btn-active">Estoque por Local</button>
-                <button data-report="movimentacoes" class="report-nav-btn">Movimentações</button>
-                <button data-report="listaEstoque" class="report-nav-btn">Lista de Estoque</button>
-                <button data-report="listaFabricante" class="report-nav-btn">Lista por Fabricante</button>
+                <button data-action="render-report" data-report="estoquePorLocal" class="report-nav-btn-active">Estoque por Local</button>
+                <button data-action="render-report" data-report="movimentacoes" class="report-nav-btn">Movimentações</button>
+                <button data-action="render-report" data-report="listaEstoque" class="report-nav-btn">Lista de Estoque</button>
+                <button data-action="render-report" data-report="listaFabricante" class="report-nav-btn">Lista por Fabricante</button>
             `;
             if (currentUserRole === 'master') {
-                reportNavButtons += `<button data-report="movimentacoesUsuario" class="report-nav-btn">Movimentações por Usuário</button>`;
+                reportNavButtons += `<button data-action="render-report" data-report="movimentacoesUsuario" class="report-nav-btn">Movimentações por Usuário</button>`;
             }
 
             viewContainer.innerHTML = `
@@ -442,18 +400,6 @@
                 </div>
             `;
             
-            const reportNav = document.getElementById('report-nav');
-            reportNav.addEventListener('click', e => {
-                if (e.target.tagName === 'BUTTON') {
-                    reportNav.querySelectorAll('button').forEach(btn => {
-                        btn.classList.remove('report-nav-btn-active');
-                        btn.classList.add('report-nav-btn');
-                    });
-                    e.target.classList.add('report-nav-btn-active');
-                    e.target.classList.remove('report-nav-btn');
-                    renderizarRelatorio(e.target.dataset.report);
-                }
-            });
             renderizarRelatorio('estoquePorLocal'); // Renderiza o primeiro relatório por padrão
         }
 
@@ -471,8 +417,7 @@
 
         // ... (resto do código dos relatórios e outras funções)
         function renderizarViewUsuarios() {
-            renderizarHeader('Gestão de Usuários', {id: 'abrirModalUsuario', text: 'Adicionar Usuário', icon: 'fas fa-plus'});
-            document.getElementById('abrirModalUsuario').addEventListener('click', () => abrirModalUsuario());
+            renderizarHeader('Gestão de Usuários', {action: 'abrir-modal-usuario', text: 'Adicionar Usuário', icon: 'fas fa-plus'});
 
             const list = document.createElement('div');
             list.className = 'bg-white rounded-lg shadow-md divide-y divide-gray-200';
@@ -492,9 +437,67 @@
                     </div>`;
             });
             viewContainer.appendChild(list);
-            viewContainer.addEventListener('click', handleCardClick);
         }
 
+        // --- MANIPULADOR DE EVENTOS CENTRAL ---
+        document.addEventListener('click', (e) => {
+            const target = e.target.closest('[data-action]');
+            if (!target) return;
+
+            const { action, id, collection, view, report } = target.dataset;
+            
+            // Ações de Navegação
+            if (action === 'navigate-view') {
+                e.preventDefault();
+                currentView = view;
+                
+                mainNav.querySelectorAll('button, a').forEach(el => {
+                    el.classList.remove('nav-btn-active');
+                    if(el.tagName === 'BUTTON' && !el.parentElement.classList.contains('relative')) el.classList.add('nav-btn');
+                });
+                
+                if (target.closest('#cadastros-dropdown')) {
+                    cadastrosBtn.classList.add('nav-btn-active');
+                    cadastrosBtn.classList.remove('nav-btn');
+                } else {
+                    target.classList.add('nav-btn-active');
+                    target.classList.remove('nav-btn');
+                    cadastrosBtn.classList.remove('nav-btn-active');
+                    cadastrosBtn.classList.add('nav-btn');
+                }
+                
+                cadastrosDropdown.classList.add('hidden');
+                renderizarView();
+            }
+            if (action === 'toggle-cadastros-dropdown') {
+                cadastrosDropdown.classList.toggle('hidden');
+            }
+            if (action === 'logout') {
+                signOut(auth);
+            }
+
+            // Ações de Abertura de Modal
+            if (action === 'abrir-modal-produto') abrirModalProduto();
+            if (action === 'abrir-modal-usuario') abrirModalUsuario();
+            if (action === 'abrir-modal-auxiliar') abrirModalAuxiliar(collection);
+            if (action === 'detalhes') abrirModalDetalhes(id);
+            if (action === 'movimentar') abrirModalMovimentar(id);
+            if (action === 'editar-produto') abrirModalProduto(id);
+            
+            // Ações de Exclusão
+            if (action === 'excluir-item') excluirItem(collection, id);
+
+            // Ações de Relatório
+            if (action === 'render-report') {
+                document.getElementById('report-nav').querySelectorAll('button').forEach(btn => {
+                    btn.classList.remove('report-nav-btn-active');
+                    btn.classList.add('report-nav-btn');
+                });
+                target.classList.add('report-nav-btn-active');
+                target.classList.remove('report-nav-btn');
+                renderizarRelatorio(report);
+            }
+        });
     </script>
 </body>
 </html>
